@@ -33,19 +33,23 @@ angular.module('ui.tinymce', [])
           };
 
         function toggleDisable(disabled) {
-          if (disabled) {
             ensureInstance();
 
             if (tinyInstance) {
-              tinyInstance.getBody().setAttribute('contenteditable', false);
-            }
-          } else {
-            ensureInstance();
 
-            if (tinyInstance) {
-              tinyInstance.getBody().setAttribute('contenteditable', true);
+				// get the elements
+            	var body = tinyInstance.getBody();
+            	var container = tinyInstance.getContainer();
+
+				// set the body contenteditable attribute to prevent editing
+            	body.setAttribute('contenteditable', !disabled);
+
+				// prevent any pointer events to the whole container
+	            tinymce.DOM.setStyle(container, "pointer-events", disabled ? "none" : "auto");
+
+				// fade out the container and toolbar
+	            tinymce.DOM.setStyle(container, "opacity", disabled ? "0.2" : "1");
             }
-          }
         }
 
         // generate an ID
@@ -99,6 +103,7 @@ angular.module('ui.tinymce', [])
               });
             }
           },
+          format: 'raw',
           selector: '#' + attrs.id
         };
         // extend options with initial uiTinymceConfig and
@@ -109,6 +114,7 @@ angular.module('ui.tinymce', [])
         // re-rendering directive
         $timeout(function() {
           tinymce.init(options);
+          //toggleDisable(scope.$eval(attrs.ngDisabled));
         });
 
         ngModel.$formatters.unshift(function(modelValue) {
@@ -121,7 +127,7 @@ angular.module('ui.tinymce', [])
 
         ngModel.$render = function() {
           ensureInstance();
-          toggleDisable(scope.$eval(attrs.ngDisabled));
+          toggleDisable(scope.$eval(attrs.ngDisabled)); // Long's fix for tinyMce disabled state when initialized https://github.com/angular-ui/ui-tinymce/issues/74
 
           var viewValue = ngModel.$viewValue ?
             $sce.getTrustedHtml(ngModel.$viewValue) : '';
